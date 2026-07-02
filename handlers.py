@@ -22,82 +22,101 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message is None:
         return
 
-    # ---------------- PHOTO ----------------
-    if update.message.photo:
+    try:
+        # ===========================
+        # PHOTO RECEIVED
+        # ===========================
+        if update.message.photo:
 
-        if "client_data" not in context.user_data:
+            if "client_data" not in context.user_data:
+                await update.message.reply_text(
+                    "❌ Please send the client information first."
+                )
+                return
+
+            photo = update.message.photo[-1]
+            file_id = photo.file_id
+
+            client = context.user_data["client_data"]
+
+            add_client(
+                client["name"],
+                client["facebook"],
+                client["instagram"],
+                client["threads"],
+                client["age"],
+                client["profession"],
+                client["address"],
+                file_id,
+            )
+
+            context.user_data.clear()
+
             await update.message.reply_text(
-                "❌ Please send the client information first."
+                "✅ Client saved successfully!"
             )
             return
 
-        photo = update.message.photo[-1]
-        file_id = photo.file_id
+        # ===========================
+        # TEXT RECEIVED
+        # ===========================
+        if update.message.text:
 
-        client = context.user_data["client_data"]
+            text = update.message.text.strip()
 
-        add_client(
-            client["name"],
-            client["facebook"],
-            client["instagram"],
-            client["threads"],
-            client["age"],
-            client["profession"],
-            client["address"],
-            file_id,
-        )
+            data = {}
 
-        context.user_data.clear()
+            for line in text.splitlines():
 
-        await update.message.reply_text(
-            "✅ Client saved successfully!"
-        )
-        return
+                if ":" not in line:
+                    continue
 
-    # ---------------- TEXT ----------------
-    if update.message.text:
+                key, value = line.split(":", 1)
 
-        text = update.message.text.strip()
+                data[key.strip().lower()] = value.strip()
 
-        data = {}
+            required = [
+                "name",
+                "facebook",
+                "instagram",
+                "threads",
+                "age",
+                "profession",
+                "address",
+            ]
 
-        for line in text.splitlines():
+            missing = [field for field in required if field not in data]
 
-            if ":" not in line:
-                continue
+            if missing:
+                await update.message.reply_text(
+                    "❌ Invalid format.\n\n"
+                    "Example:\n\n"
+                    "Name: John Doe\n"
+                    "Facebook: john123\n"
+                    "Instagram: john_insta\n"
+                    "Threads: johnthreads\n"
+                    "Age: 28\n"
+                    "Profession: Business\n"
+                    "Address: New York"
+                )
+                return
 
-            key, value = line.split(":", 1)
+            context.user_data["client_data"] = {
+                "name": data["name"],
+                "facebook": data["facebook"],
+                "instagram": data["instagram"],
+                "threads": data["threads"],
+                "age": data["age"],
+                "profession": data["profession"],
+                "address": data["address"],
+            }
 
-            data[key.strip().lower()] = value.strip()
-
-        required = [
-            "name",
-            "facebook",
-            "instagram",
-            "threads",
-            "age",
-            "profession",
-            "address",
-        ]
-
-        missing = [field for field in required if field not in data]
-
-        if missing:
             await update.message.reply_text(
-                "❌ Invalid format.\n\n"
-                "Please send exactly like this:\n\n"
-                "Name: John Doe\n"
-                "Facebook: john123\n"
-                "Instagram: john_insta\n"
-                "Threads: johnthreads\n"
-                "Age: 28\n"
-                "Profession: Business\n"
-                "Address: New York"
+                "📷 Now send the client's photo."
             )
-            return
 
-        context.user_data["client_data"] = data
-
+    except Exception as e:
+        print("ERROR:", e)
         await update.message.reply_text(
-            "📷 Now send the client's photo."
+            f"❌ Error:\n{e}"
         )
