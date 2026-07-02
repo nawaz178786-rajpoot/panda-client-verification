@@ -1,6 +1,10 @@
+import traceback
+
 from telegram import Update
 from telegram.ext import ContextTypes
+
 from database import add_client, client_exists
+from config import GROUP_ID
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -24,7 +28,6 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     try:
-        ...
 
         # ==========================
         # PHOTO RECEIVED
@@ -42,6 +45,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             client = context.user_data["client_data"]
 
+            # Save to database
             add_client(
                 client["name"],
                 client["facebook"],
@@ -55,6 +59,36 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 update.effective_user.id,
                 update.effective_user.full_name,
             )
+
+            # Caption for group
+            caption = (
+                "✅ NEW CLIENT ADDED\n\n"
+                f"👤 Name: {client['name']}\n"
+                f"📘 Facebook: {client['facebook']}\n"
+                f"📸 Instagram: {client['instagram']}\n"
+                f"🧵 Threads: {client['threads']}\n"
+                f"🎂 Age: {client['age']}\n"
+                f"💼 Profession: {client['profession']}\n"
+                f"📍 Address: {client['address']}\n"
+                f"📝 Notes: {client.get('notes', '-')}\n\n"
+                f"👮 Added By: {update.effective_user.full_name}"
+            )
+
+            # Send to Telegram group
+            try:
+                await context.bot.send_photo(
+                    chat_id=GROUP_ID,
+                    photo=file_id,
+                    caption=caption,
+                )
+                print("✅ Photo sent to group successfully.")
+
+            except Exception as group_error:
+                print("========== GROUP SEND ERROR ==========")
+                traceback.print_exc()
+                print("GROUP_ID:", GROUP_ID)
+                print("ERROR:", group_error)
+                print("======================================")
 
             context.user_data.clear()
 
@@ -138,9 +172,9 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "📷 Now send the client's photo."
             )
 
-    except Exception as e:
-        print("ERROR:", e)
+    except Exception:
+        traceback.print_exc()
 
         await update.message.reply_text(
-            f"❌ Error:\n{e}"
+            "❌ An unexpected error occurred. Check Railway logs."
         )
