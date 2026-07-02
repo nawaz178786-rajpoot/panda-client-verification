@@ -1,6 +1,6 @@
 from telegram import Update
 from telegram.ext import ContextTypes
-from database import add_client
+from database import add_client, client_exists
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -103,6 +103,22 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "Profession: Business\n"
                     "Address: New York\n"
                     "Notes: VIP Client"
+                )
+                return
+
+            # ==========================
+            # DUPLICATE CHECK
+            # ==========================
+            existing = client_exists(
+                facebook=data.get("facebook", ""),
+                instagram=data.get("instagram", ""),
+                threads=data.get("threads", ""),
+            )
+
+            if existing:
+                await update.message.reply_text(
+                    "⚠️ Client already exists in the database.\n\n"
+                    "This client cannot be added again."
                 )
                 return
 
