@@ -24,33 +24,37 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # Handle photo
-    if update.message.photo:
-        if "client_data" not in context.user_data:
-            await update.message.reply_text(
-                "❌ Please send the client information first."
-            )
-            return
+if update.message.photo:
+    await update.message.reply_text("📷 Photo received!")
 
-        photo = update.message.photo[-1]
-        file_id = photo.file_id
-
-        client = context.user_data["client_data"]
-
-        add_client(
-            client["name"],
-            client["facebook"],
-            client["instagram"],
-            client["threads"],
-            client["age"],
-            client["profession"],
-            client["address"],
-            file_id,
+    if "client_data" not in context.user_data:
+        await update.message.reply_text(
+            "❌ Please send the client information first."
         )
-
-        context.user_data.clear()
-
-        await update.message.reply_text("✅ Client saved successfully!")
         return
+
+    photo = update.message.photo[-1]
+    file_id = photo.file_id
+
+    client = context.user_data["client_data"]
+
+    await update.message.reply_text("💾 Saving client...")
+
+    add_client(
+        client["name"],
+        client["facebook"],
+        client["instagram"],
+        client["threads"],
+        client["age"],
+        client["profession"],
+        client["address"],
+        file_id,
+    )
+
+    context.user_data.clear()
+
+    await update.message.reply_text("✅ Client saved successfully!")
+    return
 
     # Handle text
     if update.message.text:
