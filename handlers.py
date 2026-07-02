@@ -3,7 +3,11 @@ import traceback
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from database import add_client, client_exists
+from database import (
+    add_client,
+    client_exists,
+    search_client,
+)
 from config import GROUP_ID
 
 
@@ -45,7 +49,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             client = context.user_data["client_data"]
 
-            # Save to database
+            # Save client
             add_client(
                 client["name"],
                 client["facebook"],
@@ -60,7 +64,6 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 update.effective_user.full_name,
             )
 
-            # Caption for group
             caption = (
                 "✅ NEW CLIENT ADDED\n\n"
                 f"👤 Name: {client['name']}\n"
@@ -74,13 +77,13 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"👮 Added By: {update.effective_user.full_name}"
             )
 
-            # Send to Telegram group
             try:
                 await context.bot.send_photo(
                     chat_id=GROUP_ID,
                     photo=file_id,
                     caption=caption,
                 )
+
                 print("✅ Photo sent to group successfully.")
 
             except Exception as group_error:
@@ -95,6 +98,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(
                 "✅ Client saved successfully!"
             )
+
             return
 
         # ==========================
@@ -112,6 +116,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     continue
 
                 key, value = line.split(":", 1)
+
                 data[key.strip().lower()] = value.strip()
 
             required = [
@@ -141,9 +146,6 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
                 return
 
-            # ==========================
-            # DUPLICATE CHECK
-            # ==========================
             existing = client_exists(
                 facebook=data.get("facebook", ""),
                 instagram=data.get("instagram", ""),
@@ -178,3 +180,49 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             "❌ An unexpected error occurred. Check Railway logs."
         )
+
+
+# ====================================
+# SEARCH CLIENT
+# ====================================
+
+async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    if len(context.args) == 0:
+        await update.message.reply_text(
+            "Usage:\n/search username"
+        )
+        return
+
+    keyword = " ".join(context.args)
+
+    client = search_client(keyword)
+
+    if client is None:
+        await update.message.reply_text(
+            "❌ No client found."
+        )
+        return
+
+    caption = (
+        "🔍 CLIENT FOUND\n\n"
+        f"👤 Name: {client['name']}\n"
+        f"📘 Facebook: {client['facebook']}\n"
+        f"📸 Instagram: {client['instagram']}\n"
+        f"🧵 Threads: {client['threads']}\n"
+        f"🎂 Age: {client['age']}\n"
+        f"💼 Profession: {client['profession']}\n"
+        f"📍 Address: {client['address']}\n"
+        f"📝 Notes: {client['notes']}\n"
+        f"👮 Added By: {client['added_by_name']}\n"
+        f"📅 Added: {client['created_at']}"
+    )
+
+    if client["photo"]:
+        await context.bot.send_photo(
+            chat_id=update.effective_chat.id,
+            photo=client["photo"],
+            caption=caption,
+        )
+    else:
+        await update.message.reply_text(caption)
