@@ -32,10 +32,10 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text("✅ Bot Connected Successfully")
 
-        context.user_data.clear()
+context.user_data.clear()
 
-        await update.message.reply_text("✅ Client saved successfully!")
-        return
+await update.message.reply_text("✅ Client saved successfully!")
+return
 
     text = update.message.text
 
