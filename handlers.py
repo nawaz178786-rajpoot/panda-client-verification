@@ -13,7 +13,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Threads: johnthreads\n"
         "Age: 28\n"
         "Profession: Business\n"
-        "Address: New York\n\n"
+        "Address: New York\n"
+        "Notes: VIP Client\n\n"
         "Then send the client's photo."
     )
 
@@ -23,9 +24,10 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     try:
-        # ===========================
+
+        # ==========================
         # PHOTO RECEIVED
-        # ===========================
+        # ==========================
         if update.message.photo:
 
             if "client_data" not in context.user_data:
@@ -47,7 +49,10 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 client["age"],
                 client["profession"],
                 client["address"],
+                client.get("notes", ""),
                 file_id,
+                update.effective_user.id,
+                update.effective_user.full_name,
             )
 
             context.user_data.clear()
@@ -57,9 +62,9 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
 
-        # ===========================
+        # ==========================
         # TEXT RECEIVED
-        # ===========================
+        # ==========================
         if update.message.text:
 
             text = update.message.text.strip()
@@ -72,7 +77,6 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     continue
 
                 key, value = line.split(":", 1)
-
                 data[key.strip().lower()] = value.strip()
 
             required = [
@@ -97,18 +101,20 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "Threads: johnthreads\n"
                     "Age: 28\n"
                     "Profession: Business\n"
-                    "Address: New York"
+                    "Address: New York\n"
+                    "Notes: VIP Client"
                 )
                 return
 
             context.user_data["client_data"] = {
-                "name": data["name"],
-                "facebook": data["facebook"],
-                "instagram": data["instagram"],
-                "threads": data["threads"],
-                "age": data["age"],
-                "profession": data["profession"],
-                "address": data["address"],
+                "name": data.get("name", ""),
+                "facebook": data.get("facebook", ""),
+                "instagram": data.get("instagram", ""),
+                "threads": data.get("threads", ""),
+                "age": data.get("age", ""),
+                "profession": data.get("profession", ""),
+                "address": data.get("address", ""),
+                "notes": data.get("notes", ""),
             }
 
             await update.message.reply_text(
@@ -117,6 +123,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     except Exception as e:
         print("ERROR:", e)
+
         await update.message.reply_text(
             f"❌ Error:\n{e}"
         )
