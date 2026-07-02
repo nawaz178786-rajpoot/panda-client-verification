@@ -1,29 +1,6 @@
-from telegram import Update
-from telegram.ext import ContextTypes
-from telegram import Update
-from telegram.ext import ContextTypes
-from database import add_client
-
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "👋 Welcome to Panda Client Verification Bot!\n\n"
-        "Send client information in this format:\n\n"
-        "Name: John\n"
-        "Facebook: john123\n"
-        "Instagram: john_insta\n"
-        "Threads: johnthreads\n"
-        "Age: 28\n"
-        "Profession: Business\n"
-        "Address: New York\n\n"
-        "Then send the client's photo."
-    )
-
-
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     print("========== UPDATE ==========")
-
     print(update)
 
     if update.effective_chat:
@@ -31,11 +8,6 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print("GROUP NAME =", update.effective_chat.title)
 
     await update.message.reply_text("✅ Bot Connected Successfully")
-
-context.user_data.clear()
-
-await update.message.reply_text("✅ Client saved successfully!")
-return
 
     text = update.message.text
 
@@ -60,5 +32,5 @@ return
 
         await update.message.reply_text("📷 Now send the client's photo.")
 
-    except:
+    except Exception:
         await update.message.reply_text("❌ Invalid format.")
