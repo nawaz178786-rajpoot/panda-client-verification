@@ -6,7 +6,7 @@ from database import add_client
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "👋 Welcome to Panda Client Verification Bot!\n\n"
-        "Send client information in this format:\n\n"
+        "Send client information like this:\n\n"
         "Name: John Doe\n"
         "Facebook: john123\n"
         "Instagram: john_insta\n"
@@ -19,54 +19,55 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Ignore non-message updates
     if update.message is None:
         return
 
-    # Handle photo
-if update.message.photo:
-    await update.message.reply_text("📷 Photo received!")
+    # ---------------- PHOTO ----------------
+    if update.message.photo:
 
-    if "client_data" not in context.user_data:
+        if "client_data" not in context.user_data:
+            await update.message.reply_text(
+                "❌ Please send the client information first."
+            )
+            return
+
+        photo = update.message.photo[-1]
+        file_id = photo.file_id
+
+        client = context.user_data["client_data"]
+
+        add_client(
+            client["name"],
+            client["facebook"],
+            client["instagram"],
+            client["threads"],
+            client["age"],
+            client["profession"],
+            client["address"],
+            file_id,
+        )
+
+        context.user_data.clear()
+
         await update.message.reply_text(
-            "❌ Please send the client information first."
+            "✅ Client saved successfully!"
         )
         return
 
-    photo = update.message.photo[-1]
-    file_id = photo.file_id
-
-    client = context.user_data["client_data"]
-
-    await update.message.reply_text("💾 Saving client...")
-
-    add_client(
-        client["name"],
-        client["facebook"],
-        client["instagram"],
-        client["threads"],
-        client["age"],
-        client["profession"],
-        client["address"],
-        file_id,
-    )
-
-    context.user_data.clear()
-
-    await update.message.reply_text("✅ Client saved successfully!")
-    return
-
-    # Handle text
+    # ---------------- TEXT ----------------
     if update.message.text:
+
         text = update.message.text.strip()
 
         data = {}
 
         for line in text.splitlines():
+
             if ":" not in line:
                 continue
 
             key, value = line.split(":", 1)
+
             data[key.strip().lower()] = value.strip()
 
         required = [
@@ -79,10 +80,12 @@ if update.message.photo:
             "address",
         ]
 
-        if not all(field in data for field in required):
+        missing = [field for field in required if field not in data]
+
+        if missing:
             await update.message.reply_text(
                 "❌ Invalid format.\n\n"
-                "Example:\n\n"
+                "Please send exactly like this:\n\n"
                 "Name: John Doe\n"
                 "Facebook: john123\n"
                 "Instagram: john_insta\n"
@@ -95,4 +98,6 @@ if update.message.photo:
 
         context.user_data["client_data"] = data
 
-        await update.message.reply_text("📷 Now send the client's photo.")
+        await update.message.reply_text(
+            "📷 Now send the client's photo."
+        )
