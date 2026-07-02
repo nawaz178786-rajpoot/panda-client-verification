@@ -70,14 +70,14 @@ def add_client(
     )
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        name,
-        facebook,
-        instagram,
-        threads,
-        age,
-        profession,
-        address,
-        notes,
+        name.strip(),
+        facebook.strip(),
+        instagram.strip(),
+        threads.strip(),
+        age.strip(),
+        profession.strip(),
+        address.strip(),
+        notes.strip(),
         photo,
         added_by,
         added_by_name,
@@ -95,9 +95,9 @@ def client_exists(facebook="", instagram="", threads=""):
     SELECT *
     FROM clients
     WHERE
-        facebook = ?
-        OR instagram = ?
-        OR threads = ?
+        LOWER(TRIM(facebook)) = LOWER(TRIM(?))
+        OR LOWER(TRIM(instagram)) = LOWER(TRIM(?))
+        OR LOWER(TRIM(threads)) = LOWER(TRIM(?))
     LIMIT 1
     """, (
         facebook,
@@ -120,9 +120,9 @@ def get_client_by_username(username):
     SELECT *
     FROM clients
     WHERE
-        LOWER(facebook) = LOWER(?)
-        OR LOWER(instagram) = LOWER(?)
-        OR LOWER(threads) = LOWER(?)
+        LOWER(TRIM(facebook)) = LOWER(TRIM(?))
+        OR LOWER(TRIM(instagram)) = LOWER(TRIM(?))
+        OR LOWER(TRIM(threads)) = LOWER(TRIM(?))
     LIMIT 1
     """, (
         username,
@@ -141,7 +141,10 @@ def search_client(keyword):
     conn = connect()
     cur = conn.cursor()
 
-    keyword = keyword.lower()
+    keyword = keyword.strip().lower()
+
+    print("=" * 50)
+    print("SEARCH:", keyword)
 
     cur.execute("""
     SELECT *
@@ -151,8 +154,7 @@ def search_client(keyword):
         OR LOWER(facebook) LIKE ?
         OR LOWER(instagram) LIKE ?
         OR LOWER(threads) LIKE ?
-    ORDER BY created_at DESC
-    LIMIT 1
+    ORDER BY id DESC
     """, (
         f"%{keyword}%",
         f"%{keyword}%",
@@ -160,11 +162,19 @@ def search_client(keyword):
         f"%{keyword}%",
     ))
 
-    row = cur.fetchone()
+    rows = cur.fetchall()
+
+    print("FOUND ROWS:", len(rows))
+
+    for row in rows:
+        print(dict(row))
 
     conn.close()
 
-    return row
+    if rows:
+        return rows[0]
+
+    return None
 
 
 def get_total_clients():
