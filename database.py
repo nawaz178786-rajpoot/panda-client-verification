@@ -120,14 +120,44 @@ def get_client_by_username(username):
     SELECT *
     FROM clients
     WHERE
-        facebook = ?
-        OR instagram = ?
-        OR threads = ?
+        LOWER(facebook) = LOWER(?)
+        OR LOWER(instagram) = LOWER(?)
+        OR LOWER(threads) = LOWER(?)
     LIMIT 1
     """, (
         username,
         username,
         username,
+    ))
+
+    row = cur.fetchone()
+
+    conn.close()
+
+    return row
+
+
+def search_client(keyword):
+    conn = connect()
+    cur = conn.cursor()
+
+    keyword = keyword.lower()
+
+    cur.execute("""
+    SELECT *
+    FROM clients
+    WHERE
+        LOWER(name) LIKE ?
+        OR LOWER(facebook) LIKE ?
+        OR LOWER(instagram) LIKE ?
+        OR LOWER(threads) LIKE ?
+    ORDER BY created_at DESC
+    LIMIT 1
+    """, (
+        f"%{keyword}%",
+        f"%{keyword}%",
+        f"%{keyword}%",
+        f"%{keyword}%",
     ))
 
     row = cur.fetchone()
