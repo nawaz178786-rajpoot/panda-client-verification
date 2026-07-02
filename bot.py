@@ -7,8 +7,12 @@ from telegram.ext import (
 
 from config import BOT_TOKEN
 from handlers import start, message_handler
+from database import create_tables
 
 print("🚀 Bot Started...")
+
+# Create the database table if it doesn't exist
+create_tables()
 
 app = Application.builder().token(BOT_TOKEN).build()
 
