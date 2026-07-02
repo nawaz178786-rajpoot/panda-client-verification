@@ -23,7 +23,11 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message is None:
         return
 
+    print("CHAT ID:", update.effective_chat.id)
+    print("CHAT TYPE:", update.effective_chat.type)
+
     try:
+        ...
 
         # ==========================
         # PHOTO RECEIVED
