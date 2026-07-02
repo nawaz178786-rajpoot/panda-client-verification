@@ -7,7 +7,9 @@ os.makedirs("data", exist_ok=True)
 
 
 def connect():
-    return sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 
 def create_tables():
@@ -53,8 +55,7 @@ def add_client(
     cur = conn.cursor()
 
     cur.execute("""
-    INSERT INTO clients
-    (
+    INSERT INTO clients (
         name,
         facebook,
         instagram,
@@ -97,6 +98,7 @@ def client_exists(facebook="", instagram="", threads=""):
         facebook = ?
         OR instagram = ?
         OR threads = ?
+    LIMIT 1
     """, (
         facebook,
         instagram,
@@ -108,3 +110,41 @@ def client_exists(facebook="", instagram="", threads=""):
     conn.close()
 
     return row
+
+
+def get_client_by_username(username):
+    conn = connect()
+    cur = conn.cursor()
+
+    cur.execute("""
+    SELECT *
+    FROM clients
+    WHERE
+        facebook = ?
+        OR instagram = ?
+        OR threads = ?
+    LIMIT 1
+    """, (
+        username,
+        username,
+        username,
+    ))
+
+    row = cur.fetchone()
+
+    conn.close()
+
+    return row
+
+
+def get_total_clients():
+    conn = connect()
+    cur = conn.cursor()
+
+    cur.execute("SELECT COUNT(*) FROM clients")
+
+    total = cur.fetchone()[0]
+
+    conn.close()
+
+    return total
