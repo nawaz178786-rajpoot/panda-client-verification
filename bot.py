@@ -8,15 +8,16 @@ from telegram.ext import (
 from config import BOT_TOKEN
 from handlers import start, message_handler
 
-print("Bot Started...")
+print("🚀 Bot Started...")
 
 app = Application.builder().token(BOT_TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
+
 app.add_handler(
     MessageHandler(
-        filters.ALL,
-        message_handler
+        filters.TEXT | filters.PHOTO,
+        message_handler,
     )
 )
 

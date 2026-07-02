@@ -1,7 +1,11 @@
-BOT_TOKEN = "8914989689:AAGdVk8tj6VIA5uk-vsWXrA5yqRCv4aBKWc"
+import os
+
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 ADMIN_IDS = [
-    123456789
+    int(x)
+    for x in os.getenv("ADMIN_IDS", "").split(",")
+    if x
 ]
 
-GROUP_ID = -1001234567890
+GROUP_ID = int(os.getenv("GROUP_ID", "0"))

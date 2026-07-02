@@ -24,7 +24,10 @@ def create_tables():
         age TEXT,
         profession TEXT,
         address TEXT,
+        notes TEXT,
         photo TEXT,
+        added_by INTEGER,
+        added_by_name TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
@@ -33,14 +36,38 @@ def create_tables():
     conn.close()
 
 
-def add_client(name, facebook, instagram, threads, age, profession, address, photo):
+def add_client(
+    name,
+    facebook,
+    instagram,
+    threads,
+    age,
+    profession,
+    address,
+    notes,
+    photo,
+    added_by,
+    added_by_name,
+):
     conn = connect()
     cur = conn.cursor()
 
     cur.execute("""
     INSERT INTO clients
-    (name, facebook, instagram, threads, age, profession, address, photo)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    (
+        name,
+        facebook,
+        instagram,
+        threads,
+        age,
+        profession,
+        address,
+        notes,
+        photo,
+        added_by,
+        added_by_name
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         name,
         facebook,
@@ -49,26 +76,31 @@ def add_client(name, facebook, instagram, threads, age, profession, address, pho
         age,
         profession,
         address,
-        photo
+        notes,
+        photo,
+        added_by,
+        added_by_name,
     ))
 
     conn.commit()
     conn.close()
 
 
-def client_exists(username):
+def client_exists(facebook="", instagram="", threads=""):
     conn = connect()
     cur = conn.cursor()
 
     cur.execute("""
-    SELECT * FROM clients
-    WHERE facebook=?
-       OR instagram=?
-       OR threads=?
+    SELECT *
+    FROM clients
+    WHERE
+        facebook = ?
+        OR instagram = ?
+        OR threads = ?
     """, (
-        username,
-        username,
-        username
+        facebook,
+        instagram,
+        threads,
     ))
 
     row = cur.fetchone()
