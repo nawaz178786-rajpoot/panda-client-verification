@@ -21,11 +21,17 @@ create_tables()
 # Create bot
 app = Application.builder().token(BOT_TOKEN).build()
 
-# Commands
+# =====================================
+# COMMANDS
+# =====================================
+
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("search", search))
 
-# Messages
+# =====================================
+# MESSAGE HANDLER
+# =====================================
+
 app.add_handler(
     MessageHandler(
         filters.TEXT | filters.PHOTO,
@@ -33,5 +39,8 @@ app.add_handler(
     )
 )
 
-# Start bot
+# =====================================
+# START BOT
+# =====================================
+
 app.run_polling(drop_pending_updates=True)
