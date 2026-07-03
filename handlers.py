@@ -28,18 +28,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
     if update.message is None:
         return
 
-    # Ignore commands like /search and /start
+    # Ignore commands (/start, /search, etc.)
     if update.message.text and update.message.text.startswith("/"):
         return
 
     try:
 
-        # ==========================
+        # ===================================================
         # PHOTO RECEIVED
-        # ==========================
+        # ===================================================
+
         if update.message.photo:
 
             if "client_data" not in context.user_data:
@@ -86,13 +88,12 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     photo=file_id,
                     caption=caption,
                 )
+
                 print("✅ Photo sent to group successfully.")
 
-            except Exception as group_error:
+            except Exception:
                 print("========== GROUP SEND ERROR ==========")
                 traceback.print_exc()
-                print("GROUP_ID:", GROUP_ID)
-                print("ERROR:", group_error)
                 print("======================================")
 
             context.user_data.clear()
@@ -100,11 +101,13 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(
                 "✅ Client saved successfully!"
             )
+
             return
 
-        # ==========================
+        # ===================================================
         # TEXT RECEIVED
-        # ==========================
+        # ===================================================
+
         if update.message.text:
 
             text = update.message.text.strip()
@@ -147,28 +150,52 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
                 return
 
-            existing = client_exists(
-                facebook=data.get("facebook", ""),
-                instagram=data.get("instagram", ""),
-                threads=data.get("threads", ""),
-            )
+            # ===================================================
+            # REQUIRE AT LEAST ONE SOCIAL USERNAME
+            # ===================================================
 
-            if existing:
+            facebook = data.get("facebook", "").strip()
+            instagram = data.get("instagram", "").strip()
+            threads = data.get("threads", "").strip()
+
+            if not (facebook or instagram or threads):
                 await update.message.reply_text(
-                    "⚠️ Client already exists in the database.\n\n"
-                    "This client cannot be added again."
+                    "❌ Please provide at least one social media username "
+                    "(Facebook, Instagram or Threads)."
                 )
                 return
 
+            # ===================================================
+            # DUPLICATE CHECK
+            # ===================================================
+
+            existing = client_exists(
+                facebook=facebook,
+                instagram=instagram,
+                threads=threads,
+            )
+
+            if existing:
+
+                await update.message.reply_text(
+                    "⚠️ Client already exists in the database.\n\n"
+                    f"👤 Name: {existing['name']}\n"
+                    f"👮 Added By: {existing['added_by_name']}\n"
+                    f"📅 Added: {existing['created_at']}\n\n"
+                    "Use /search to view the complete client information."
+                )
+
+                return
+
             context.user_data["client_data"] = {
-                "name": data.get("name", ""),
-                "facebook": data.get("facebook", ""),
-                "instagram": data.get("instagram", ""),
-                "threads": data.get("threads", ""),
-                "age": data.get("age", ""),
-                "profession": data.get("profession", ""),
-                "address": data.get("address", ""),
-                "notes": data.get("notes", ""),
+                "name": data.get("name", "").strip(),
+                "facebook": facebook,
+                "instagram": instagram,
+                "threads": threads,
+                "age": data.get("age", "").strip(),
+                "profession": data.get("profession", "").strip(),
+                "address": data.get("address", "").strip(),
+                "notes": data.get("notes", "").strip(),
             }
 
             await update.message.reply_text(
@@ -176,6 +203,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
 
     except Exception:
+
         traceback.print_exc()
 
         await update.message.reply_text(
@@ -183,9 +211,9 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
-# ====================================
-# SEARCH CLIENT
-# ====================================
+# ===================================================
+# SEARCH COMMAND
+# ===================================================
 
 async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
