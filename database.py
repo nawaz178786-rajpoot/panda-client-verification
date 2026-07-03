@@ -16,6 +16,7 @@ def create_tables():
     conn = connect()
     cur = conn.cursor()
 
+    # Create table if it doesn't exist
     cur.execute("""
     CREATE TABLE IF NOT EXISTS clients (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,6 +26,8 @@ def create_tables():
         threads TEXT,
         age TEXT,
         profession TEXT,
+        education TEXT,
+        marital_status TEXT,
         address TEXT,
         notes TEXT,
         photo TEXT,
@@ -33,6 +36,24 @@ def create_tables():
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
+
+    # Check existing columns
+    cur.execute("PRAGMA table_info(clients)")
+    columns = [row[1] for row in cur.fetchall()]
+
+    # Add education column if missing
+    if "education" not in columns:
+        cur.execute(
+            "ALTER TABLE clients ADD COLUMN education TEXT DEFAULT ''"
+        )
+        print("✅ Added 'education' column")
+
+    # Add marital_status column if missing
+    if "marital_status" not in columns:
+        cur.execute(
+            "ALTER TABLE clients ADD COLUMN marital_status TEXT DEFAULT ''"
+        )
+        print("✅ Added 'marital_status' column")
 
     conn.commit()
     conn.close()
@@ -45,6 +66,8 @@ def add_client(
     threads,
     age,
     profession,
+    education,
+    marital_status,
     address,
     notes,
     photo,
@@ -62,13 +85,15 @@ def add_client(
         threads,
         age,
         profession,
+        education,
+        marital_status,
         address,
         notes,
         photo,
         added_by,
         added_by_name
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         name.strip(),
         facebook.strip(),
@@ -76,6 +101,8 @@ def add_client(
         threads.strip(),
         age.strip(),
         profession.strip(),
+        education.strip(),
+        marital_status.strip(),
         address.strip(),
         notes.strip(),
         photo,
@@ -172,9 +199,17 @@ def search_client(keyword):
         OR LOWER(facebook) LIKE ?
         OR LOWER(instagram) LIKE ?
         OR LOWER(threads) LIKE ?
+        OR LOWER(profession) LIKE ?
+        OR LOWER(education) LIKE ?
+        OR LOWER(marital_status) LIKE ?
+        OR LOWER(address) LIKE ?
     ORDER BY id DESC
     LIMIT 1
     """, (
+        f"%{keyword}%",
+        f"%{keyword}%",
+        f"%{keyword}%",
+        f"%{keyword}%",
         f"%{keyword}%",
         f"%{keyword}%",
         f"%{keyword}%",
