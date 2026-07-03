@@ -31,6 +31,10 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message is None:
         return
 
+    # Ignore commands like /search and /start
+    if update.message.text and update.message.text.startswith("/"):
+        return
+
     try:
 
         # ==========================
@@ -49,7 +53,6 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             client = context.user_data["client_data"]
 
-            # Save client
             add_client(
                 client["name"],
                 client["facebook"],
@@ -83,7 +86,6 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     photo=file_id,
                     caption=caption,
                 )
-
                 print("✅ Photo sent to group successfully.")
 
             except Exception as group_error:
@@ -98,7 +100,6 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(
                 "✅ Client saved successfully!"
             )
-
             return
 
         # ==========================
@@ -194,13 +195,13 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    keyword = " ".join(context.args)
+    keyword = " ".join(context.args).strip()
 
     client = search_client(keyword)
 
     if client is None:
         await update.message.reply_text(
-            "❌ No client found."
+            f"❌ No client found for:\n{keyword}"
         )
         return
 
